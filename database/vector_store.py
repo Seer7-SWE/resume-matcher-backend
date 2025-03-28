@@ -1,15 +1,31 @@
 import faiss
 import numpy as np
 import sqlite3
+import os
 from sentence_transformers import SentenceTransformer
 
 # Load Embedding Model
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# FAISS Index & Database Connection
-DB_PATH = "C:/Users/SELVAMANI RAJENDRAN/Documents/resume-analyzer/backend/database/resume_db.sqlite"
-conn = sqlite3.connect(DB_PATH)
+# Define the database path (ensure it exists)
+DB_DIR = "/app/database"
+DB_PATH = os.path.join(DB_DIR, "resumes.db")
+
+# Ensure the database directory exists
+os.makedirs(DB_DIR, exist_ok=True)
+
+# Create connection
+conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 cursor = conn.cursor()
+
+# Create table if it doesn't exist
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS resumes (
+        id TEXT PRIMARY KEY,
+        text TEXT NOT NULL
+    )
+""")
+conn.commit()
 
 # Initialize FAISS index
 DIMENSION = 384  # Output size of MiniLM model
@@ -21,7 +37,7 @@ def store_resume_embedding(resume_id, resume_text):
         vector = embedding_model.encode([resume_text])[0]
         index.add(np.array([vector], dtype=np.float32))
         
-        # Save to SQLite (optional for ID tracking)
+        # Save to SQLite
         cursor.execute("INSERT INTO resumes (id, text) VALUES (?, ?)", (resume_id, resume_text))
         conn.commit()
         
