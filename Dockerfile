@@ -1,24 +1,29 @@
-# Use Python 3.11 Alpine for a lightweight image
+# Use Python 3.11 on Alpine for a lightweight image
 FROM python:3.11-alpine
 
 # Set the working directory
 WORKDIR /app
 
-# Install system dependencies needed for compilation
-RUN apk add --no-cache gcc musl-dev python3-dev libffi-dev 
+# Install necessary system dependencies
+RUN apk add --no-cache gcc musl-dev python3-dev libffi-dev \
+    openssl-dev jpeg-dev zlib-dev freetype-dev lcms2-dev \
+    libwebp-dev tiff-dev tk-dev harfbuzz-dev fribidi-dev \
+    ghostscript poppler-utils poppler-dev
+
+# Upgrade pip, setuptools, and wheel before installing dependencies
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Copy dependencies file first (better for caching)
-COPY requirements.txt ./
+COPY requirements.txt /app/
 
-# Install dependencies
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application files
-COPY . .
+COPY . /app
 
 # Expose port 8000 for FastAPI
 EXPOSE 8000
 
-# Set a default command for the container
+# Start FastAPI server
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
