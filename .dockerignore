@@ -1,7 +1,12 @@
-__pycache__/
+__pycache__
 *.pyc
 *.pyo
 *.pyd
+*.db
+*.sqlite3
+*.log
 venv/
 .env
-*.log
+.git
+.dockerignore
+Dockerfile
